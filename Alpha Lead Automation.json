@@ -1,0 +1,531 @@
+{
+  "name": "Alpha Lead Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "form-submissionn",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1120,
+        48
+      ],
+      "id": "c7f1bc08-e6e0-47b1-95ca-b30a7f6e05bf",
+      "name": "Webhook",
+      "webhookId": "594f4b82-848b-49d3-a550-d519a86d160c"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert copywriter for Sarah Chen, a business coach who helps service-based entrepreneurs scale to $50K/month. \nyou are to write an email based on the lead's data\n\nLead data:\nname:{{ $('Extract lead data').item.json.body.name }} \nbusiness name: {{ $('Extract lead data').item.json.body.business_type }}\nmonthly revenue: {{ $('Extract lead data').item.json.body.monthly_revenue }}\nbiggest challenge: {{ $('Extract lead data').item.json.body.biggest_challenge }}\nhow they heard about us: {{ $('Extract lead data').item.json.body.how_did_you_hear }}\n\nwrite a personalized email from Sarah to this lead.\n\nacknowledge their specific challenge, position Sarah as the solution, and include a soft Call to action to book a call \n\nbe friendly and encouraging \n\ngive output as text since its an email",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -352,
+        16
+      ],
+      "id": "445dbe5f-68bf-4d51-928c-4eb7c044fcf6",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        192
+      ],
+      "id": "fd5ba0bd-028e-46ee-ba93-4c72c982eec0",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "T3UENzeyD3U33AA1",
+          "name": "Alpha's Groq"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "269d12e0-7531-4659-b10c-f68b503f85a5",
+              "leftValue": "={{ $json.monthly_revenue_number }}",
+              "rightValue": 10000,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "febc2329-d4fd-4741-a332-abd1bc047b21",
+              "leftValue": "={{ $json.biggest_challenge_count }}",
+              "rightValue": 50,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -544,
+        32
+      ],
+      "id": "333625d0-550a-432b-83f5-c0d53776de68",
+      "name": "conditional Qualification logic"
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = $input.all()[0].json.body;\n\nconst monthly_revenue = lead.monthly_revenue;\nconst biggest_challenge = lead.biggest_challenge;\n\nconst monthly_revenue_number = Number(monthly_revenue.  replaceAll('$','').replaceAll(',',''))\nconst biggest_challenge_count = biggest_challenge. length\n\nreturn[\n  {\n    json:{\n      \"monthly_revenue_number\": monthly_revenue_number,\n      \"biggest_challenge_count\" : biggest_challenge_count\n    }\n  }\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -752,
+        32
+      ],
+      "id": "85b621dc-0275-4479-8a6c-d823f44db41e",
+      "name": "Parse Lead Data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9a0b3bf1-2a29-43c7-83c1-96f8a1a427af",
+              "name": "body.name",
+              "value": "={{ $json.body.data.fields[0].value }}",
+              "type": "string"
+            },
+            {
+              "id": "021400c3-43f9-4ddb-a357-f213d8d38653",
+              "name": "body.email",
+              "value": "={{ $json.body.data.fields[1].value }}",
+              "type": "string"
+            },
+            {
+              "id": "bd9b465d-d775-41f5-a812-e74e50b3e6b9",
+              "name": "body.business_type",
+              "value": "={{ $json.body.data.fields[2].value }}",
+              "type": "string"
+            },
+            {
+              "id": "f2df0ecb-f134-4415-aa40-dc9955beecb3",
+              "name": "body.monthly_revenue",
+              "value": "={{ $json.body.data.fields[3].value }}",
+              "type": "string"
+            },
+            {
+              "id": "ba6504c9-626a-4245-87ac-2b2bb66fc66e",
+              "name": "body.biggest_challenge",
+              "value": "={{ $json.body.data.fields[4].value }}",
+              "type": "string"
+            },
+            {
+              "id": "550e726e-92cb-4b61-9957-2b38a21695f1",
+              "name": "body.how_did_you_hear",
+              "value": "={{ $json.body.data.fields[5].value }}",
+              "type": "string"
+            },
+            {
+              "id": "dd9b2b9b-6239-48fb-8c1f-edf8b6c02fe0",
+              "name": "body.phone",
+              "value": "={{ $json.body.data.fields[6].value }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -928,
+        32
+      ],
+      "id": "45971f03-577a-4d8f-a63e-4c8f2c10b475",
+      "name": "Extract lead data"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert copywriter for Sarah Chen, a business coach who helps service-based entrepreneurs scale to $50K/month. \nyou are to write an email based on the lead's data\n\nLead data:\nname:{{ $('Extract lead data').item.json.body.name }} \nbusiness name: {{ $('Extract lead data').item.json.body.business_type }}\nmonthly revenue: {{ $('Extract lead data').item.json.body.monthly_revenue }}\nbiggest challenge: {{ $('Extract lead data').item.json.body.biggest_challenge }}\nhow they heard about us: {{ $('Extract lead data').item.json.body.how_did_you_hear }}\n\nwrite a personalized email from Sarah to this lead.\n\nacknowledge their specific challenge,\nOutput a polite decline message \nbe friendly and encouraging \n\ngive output as text since its an email",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -944,
+        304
+      ],
+      "id": "ba205f2b-35fb-41d6-9163-6af2458a39cf",
+      "name": "Basic LLM Chain1",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f44fa63f-6ce5-4e6a-a883-99eb23bcbdeb",
+              "name": "error",
+              "value": "={{ $json.error }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -656,
+        560
+      ],
+      "id": "8aea823a-f897-428c-9c3c-616db4768433",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -976,
+        496
+      ],
+      "id": "68cac33c-0442-4575-9cdd-5c93f314dcef",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "T3UENzeyD3U33AA1",
+          "name": "Alpha's Groq"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"lead name\":\"{{ $('Extract lead data').item.json.body.name }}\",\n  \"email\":\"{{ $('Extract lead data').item.json.body.email }}\",\n  \"qualification status\": \"Qualified\",\n  \"AI-generated response\": \"{{ $json.text }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        352
+      ],
+      "id": "efc082e2-20c5-4d7d-ba48-d30f9edbfd9f",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"lead name\":\"{{ $('Extract lead data').item.json.body.name }}\",\n  \"email\":\"{{ $('Extract lead data').item.json.body.email }}\",\n  \"qualification status\": \"Qualified\",\n  \"subject\":\"{{ $json.output.Subject }}\"\n  \"AI-generated response\": \"{{ $json.output.body }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        16
+      ],
+      "id": "c2c40e63-33d1-42b4-9e10-08ce24e1ff12",
+      "name": "final output"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json['AI-generated response'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        16
+      ],
+      "id": "a39589a7-3fe2-4fc0-9453-93dca1488d83",
+      "name": "Send a message",
+      "webhookId": "d63a4c7f-fa3e-444a-a9fd-154458ce2839",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "z5M22wHBT4TJAiVR",
+          "name": "Alpha_config"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"Subject\": \"email_subject\",\n\t\"body\": \"state\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -224,
+        224
+      ],
+      "id": "45b55e30-8aa0-47c2-a336-1624d3db2aa5",
+      "name": "Structured Output Parser"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "z0pt799w.rcsrv.net",
+            "user-agent": "Tally Webhooks",
+            "content-length": "1779",
+            "accept": "application/json, text/plain, */*",
+            "accept-encoding": "gzip, br",
+            "baggage": "sentry-environment=production,sentry-release=ce9a7b106a0584b86e750c668addb6a283e52885,sentry-public_key=6af4b6673f1648edaa8fef3f2ca43405,sentry-trace_id=2dcd68bc9ed099810a824b730f1b2736,sentry-org_id=407628,sentry-sampled=false,sentry-sample_rand=0.4235299126978187,sentry-sample_rate=0",
+            "cdn-loop": "cloudflare; loops=1",
+            "cf-connecting-ip": "34.96.41.63",
+            "cf-ipcountry": "BE",
+            "cf-ray": "a13d0076c86a57a1-LHR",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "content-type": "application/json",
+            "sentry-trace": "2dcd68bc9ed099810a824b730f1b2736-b4d79e72a79dbe2e-0",
+            "x-forwarded-for": "34.96.41.63, 172.71.178.88",
+            "x-forwarded-host": "z0pt799w.rcsrv.net",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "e55373ffb478",
+            "x-real-ip": "172.71.178.88"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "eventId": "174e37c8-8c71-4aa8-b6f6-301460bbaea6",
+            "eventType": "FORM_RESPONSE",
+            "createdAt": "2026-06-30T11:58:54.437Z",
+            "data": {
+              "responseId": "GeDb2Xp",
+              "submissionId": "GeDb2Xp",
+              "respondentId": "WOqR8VL",
+              "formId": "D4YWzb",
+              "formName": "LEAD QUALIFIER",
+              "createdAt": "2026-06-30T11:58:54.000Z",
+              "submissionPdfUrl": "https://api.tally.so/forms/D4YWzb/submissions/GeDb2Xp/pdf?accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJtaXNzaW9uSWQiOiJHZURiMlhwIiwiZm9ybUlkIjoiRDRZV3piIiwiaWF0IjoxNzgyODIwNzM0fQ.955BgvcxzP4sSvlppMKP33lvSc01jJL4HhlbYVCGWRA&signature=1118a5e7bdb14cced3cdcbc1b286897f3a7d97481334ce1933083d299005eddb",
+              "submissionPreviewUrl": "https://tally.so/forms/D4YWzb/submissions/GeDb2Xp/preview?accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJtaXNzaW9uSWQiOiJHZURiMlhwIiwiZm9ybUlkIjoiRDRZV3piIiwiaWF0IjoxNzgyODIwNzM0fQ.955BgvcxzP4sSvlppMKP33lvSc01jJL4HhlbYVCGWRA&signature=1118a5e7bdb14cced3cdcbc1b286897f3a7d97481334ce1933083d299005eddb",
+              "fields": [
+                {
+                  "key": "question_6R4ayo",
+                  "label": "Your Name",
+                  "type": "INPUT_TEXT",
+                  "value": "Alpha "
+                },
+                {
+                  "key": "question_7oj6z6",
+                  "label": "Your Email Address",
+                  "type": "INPUT_EMAIL",
+                  "value": "preciouskenneth20055@gmail.com"
+                },
+                {
+                  "key": "question_4LEgWA",
+                  "label": "Business Type",
+                  "type": "TEXTAREA",
+                  "value": "Ai Automation"
+                },
+                {
+                  "key": "question_jLgOdJ",
+                  "label": "Monthly Revenue",
+                  "type": "TEXTAREA",
+                  "value": "$10000"
+                },
+                {
+                  "key": "question_2LVMqD",
+                  "label": "Biggest Challange",
+                  "type": "TEXTAREA",
+                  "value": "I can't seem to break past $20/month. I'm doing everything myself and working 50+ hours a week, I know i need to hire but there isn't enough income to pay employees."
+                },
+                {
+                  "key": "question_x2gekv",
+                  "label": "How did you hear",
+                  "type": "TEXTAREA",
+                  "value": "Instagram"
+                },
+                {
+                  "key": "question_ZlWp4e",
+                  "label": "Phone Number",
+                  "type": "INPUT_PHONE_NUMBER",
+                  "value": "+2348146357755"
+                }
+              ]
+            }
+          },
+          "webhookUrl": "https://z0pt799w.rcsrv.net/webhook-test/form-submissionn",
+          "executionMode": "test"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract lead data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "final output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "conditional Qualification logic": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Lead Data": {
+      "main": [
+        [
+          {
+            "node": "conditional Qualification logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract lead data": {
+      "main": [
+        [
+          {
+            "node": "Parse Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "final output": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "90f000ad-4c3b-41cf-84a5-7c6f916e42fb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3437a3a362e994b286600a95c7e8de5d0dbaa6c8b3a03ffce229b1567d1a42b4"
+  },
+  "nodeGroups": [],
+  "id": "ETsFbzLxI9zJtzS1",
+  "tags": []
+}
